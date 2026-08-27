@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone, Camera, RefreshCw, CheckCircle2, QrCode } from 'lucide-react';
-import { supabase } from '@zentura/database';
 
 export const MobilePhoneScannerView: React.FC = () => {
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
@@ -78,19 +77,7 @@ export const MobilePhoneScannerView: React.FC = () => {
   const broadcastBarcode = (code: string) => {
     if (!code) return;
 
-    // 1. Supabase Realtime Broadcast (Cross-device & cellular network sync)
-    try {
-      const realtimeChannel = supabase.channel('zentura_mobile_scans');
-      realtimeChannel.send({
-        type: 'broadcast',
-        event: 'scan',
-        payload: { barcode: code, timestamp: Date.now() }
-      });
-    } catch (e) {
-      console.warn('Supabase Realtime error:', e);
-    }
-
-    // 2. BroadcastChannel API
+    // 1. BroadcastChannel API
     try {
       const channel = new BroadcastChannel('zentura-barcode-sync');
       channel.postMessage({ barcode: code, timestamp: Date.now() });
@@ -98,7 +85,7 @@ export const MobilePhoneScannerView: React.FC = () => {
       console.warn('BroadcastChannel error:', e);
     }
 
-    // 3. localStorage Event Sync
+    // 2. localStorage Event Sync
     try {
       localStorage.setItem('zentura_scanned_barcode', JSON.stringify({ barcode: code, timestamp: Date.now() }));
     } catch (e) {

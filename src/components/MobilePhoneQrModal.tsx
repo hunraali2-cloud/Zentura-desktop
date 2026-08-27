@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Smartphone, X, CheckCircle2, QrCode, ExternalLink } from 'lucide-react';
-import { supabase } from '@zentura/database';
 
 interface MobilePhoneQrModalProps {
   isOpen: boolean;
@@ -16,30 +15,14 @@ export const MobilePhoneQrModal: React.FC<MobilePhoneQrModalProps> = ({
   const [lastScanned, setLastScanned] = useState('');
 
   // Mobile Web Scanner URL
-  const mobileScannerUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? `${window.location.protocol}//${window.location.hostname}:${window.location.port}/?mode=mobile-scanner`
-    : 'https://zentura-pos.vercel.app/?mode=mobile-scanner';
+  const mobileScannerUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/?mode=mobile-scanner`;
 
   useEffect(() => {
     if (!isOpen) return;
 
     let lastProcessedTimestamp = 0;
 
-    // 1. Supabase Realtime Channel for Cross-Device / Mobile Cellular Network Sync
-    let realtimeChannel: any = null;
-    try {
-      realtimeChannel = supabase.channel('zentura_mobile_scans');
-      realtimeChannel.on('broadcast', { event: 'scan' }, (payload: any) => {
-        if (payload && payload.payload && payload.payload.barcode && payload.payload.timestamp > lastProcessedTimestamp) {
-          lastProcessedTimestamp = payload.payload.timestamp;
-          handleBarcodeReceived(payload.payload.barcode);
-        }
-      }).subscribe();
-    } catch (e) {
-      console.warn('Supabase Realtime error:', e);
-    }
-
-    // 2. BroadcastChannel API Listener
+    // 1. BroadcastChannel API Listener
     let channel: BroadcastChannel | null = null;
     try {
       channel = new BroadcastChannel('zentura-barcode-sync');
@@ -53,7 +36,7 @@ export const MobilePhoneQrModal: React.FC<MobilePhoneQrModalProps> = ({
       console.warn('BroadcastChannel error:', e);
     }
 
-    // 3. Storage event listener & 300ms fallback polling interval
+    // 2. Storage event listener & 300ms fallback polling interval
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'zentura_scanned_barcode' && e.newValue) {
         try {
@@ -86,7 +69,6 @@ export const MobilePhoneQrModal: React.FC<MobilePhoneQrModalProps> = ({
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
       if (channel) channel.close();
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
@@ -125,16 +107,12 @@ export const MobilePhoneQrModal: React.FC<MobilePhoneQrModalProps> = ({
           Scan this QR Code with <strong>ANY Smartphone Camera</strong> to turn your phone into a live barcode scanner!
         </div>
 
-        {/* Real Scannable QR Code Display Box */}
+        {/* High Contrast QR Code Display Box */}
         <div className="bg-[#F8FAFC] border-2 border-dashed border-[#CBD5E1] p-4 rounded-2xl flex flex-col items-center justify-center">
-          <div className="w-48 h-48 bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center relative p-2 shadow-inner overflow-hidden">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(mobileScannerUrl)}`}
-              alt="Scan QR Code with Smartphone Camera"
-              className="w-40 h-40 object-contain"
-            />
-            <div className="absolute bottom-1 bg-[#10B981] text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-xs">
-              Scan with Smartphone Camera
+          <div className="w-44 h-44 bg-white border border-[#E2E8F0] rounded-xl flex flex-col items-center justify-center relative p-2 shadow-inner">
+            <QrCode className="w-32 h-32 text-[#0F172A]" />
+            <div className="absolute bottom-2 bg-[#10B981] text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-xs">
+              Scan with Smartphone
             </div>
           </div>
 

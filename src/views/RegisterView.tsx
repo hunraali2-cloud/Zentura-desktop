@@ -3,11 +3,10 @@ import { BarcodeListener } from '../components/BarcodeListener';
 import { TactileNumpad } from '../components/TactileNumpad';
 import { ReceiptModal } from '../components/ReceiptModal';
 import { ManagerPinModal } from '../components/ManagerPinModal';
-import { MobilePhoneQrModal } from '../components/MobilePhoneQrModal';
 import { OnlineQrModal } from '../components/OnlineQrModal';
 import { UdhaarModal } from '../components/UdhaarModal';
 import { ReceiptOptions } from '@zentura/escpos-engine';
-import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Smartphone, Barcode, Package } from 'lucide-react';
+import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Barcode, Package } from 'lucide-react';
 import { dbSync, Product, User, StoreSettings } from '@zentura/database';
 
 interface CartItem {
@@ -35,7 +34,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
   // Modals state
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showManagerPinModal, setShowManagerPinModal] = useState(false);
-  const [showMobilePhoneQrModal, setShowMobilePhoneQrModal] = useState(false);
   const [showOnlineQrModal, setShowOnlineQrModal] = useState(false);
   const [showUdhaarModal, setShowUdhaarModal] = useState(false);
 
@@ -221,15 +219,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
             />
           </div>
 
-          {/* Mobile Phone QR Barcode Scanner Bridge Button */}
-          <button
-            onClick={() => setShowMobilePhoneQrModal(true)}
-            className="h-10 px-4 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-lg text-xs flex items-center gap-2 cursor-pointer shadow-xs"
-            title="Scan QR with any smartphone camera to use phone as barcode scanner"
-          >
-            <Smartphone className="w-4 h-4 text-[#10B981]" /> 📱 Mobile Phone Scanner
-          </button>
-
           <button
             onClick={() => {
               if (cart.length > 0) setShowManagerPinModal(true);
@@ -338,7 +327,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-[#64748B] text-xs gap-2">
                 <ShoppingCart className="w-8 h-8 opacity-40" />
-                Cart is empty. Scan product barcode or use 📱 Mobile Phone Scanner.
+                Cart is empty. Scan product barcode or search item.
               </div>
             ) : (
               cart.map((item) => (
@@ -402,12 +391,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
         isOpen={showReceiptModal}
         receiptData={receiptData}
         onClose={() => setShowReceiptModal(false)}
-      />
-
-      <MobilePhoneQrModal
-        isOpen={showMobilePhoneQrModal}
-        onScanReceived={handleBarcodeScan}
-        onClose={() => setShowMobilePhoneQrModal(false)}
       />
 
       <OnlineQrModal
