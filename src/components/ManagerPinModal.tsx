@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, KeyRound, X } from 'lucide-react';
 
 interface ManagerPinModalProps {
@@ -17,11 +17,13 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
 
-  if (!isOpen) return null;
-
   const handleDigit = (digit: string) => {
     if (pin.length < 4) {
-      setPin(pin + digit);
+      const next = pin + digit;
+      setPin(next);
+      if (next.length === 4) {
+        verifyPinDirect(next);
+      }
     }
   };
 
@@ -30,9 +32,8 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
     setError('');
   };
 
-  const handleSubmit = () => {
-    // Demo authorized Manager/Admin PIN is 9999 or 1234
-    if (pin === '9999' || pin === '1234') {
+  const verifyPinDirect = (pinVal: string) => {
+    if (pinVal === '9999' || pinVal === '1234') {
       onSuccess();
       setPin('');
       setError('');
@@ -41,6 +42,63 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
       setPin('');
     }
   };
+
+  const handleSubmit = () => {
+    verifyPinDirect(pin);
+  };
+
+  // Exclusive physical numpad interceptor
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Digits
+      if ((e.key >= '0' && e.key <= '9') || (e.code >= 'Numpad0' && e.code <= 'Numpad9')) {
+        const char = e.key >= '0' && e.key <= '9' ? e.key : e.code.replace('Numpad', '');
+        if (char >= '0' && char <= '9') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          handleDigit(char);
+        }
+      }
+      // 2. Clear / Delete / Backspace / Escape
+      else if (
+        e.key === 'Backspace' ||
+        e.key === 'Delete' ||
+        e.code === 'NumpadDecimal' ||
+        e.key.toLowerCase() === 'c'
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        handleClear();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        onCancel();
+      }
+      // 3. Enter
+      else if (e.key === 'Enter' || e.code === 'NumpadEnter') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        if (pin.length > 0) {
+          handleSubmit();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [isOpen, pin]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">

@@ -34,6 +34,7 @@ export interface ReceiptOptions {
   change: number;
   paymentMethod: string;
   timestamp: string;
+  footerNote?: string;
   paperWidthMm?: 80 | 58;
 }
 
@@ -176,7 +177,7 @@ export class EscPosBuilder {
     builder
       .align(Alignment.CENTER)
       .feed(1)
-      .line('Thank you for shopping!')
+      .line(options.footerNote || 'Thank you for shopping with us!')
       .line('Powered by Zentura POS')
       .feed(3)
       .cut();

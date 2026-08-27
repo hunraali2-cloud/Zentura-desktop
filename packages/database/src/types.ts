@@ -107,6 +107,8 @@ export interface Invoice {
   change: number;
   payment_method: PaymentMethod;
   status: InvoiceStatus;
+  items?: { product_id: string; qty: number; unit_price: number; name: string }[];
+  cost_price_total?: number;
   voided_by?: string;
   created_at: string;
 }
@@ -153,3 +155,30 @@ export interface License {
   is_active: boolean;
   created_at: string;
 }
+
+export interface Expense {
+  id: string;
+  tenant_id: string;
+  title: string;
+  amount: number;
+  category: string;
+  notes?: string;
+  cashier_name?: string;
+  created_at: string;
+}
+
+export interface UdhaarLog {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  customer_name: string;
+  customer_phone?: string;
+  invoice_number?: string;
+  type: 'generate' | 'wasool';
+  amount: number;
+  balance_after: number;
+  cashier_name?: string;
+  notes?: string;
+  created_at: string;
+}
+

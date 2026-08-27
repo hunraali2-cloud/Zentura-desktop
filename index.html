@@ -2,15 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/zentura-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zentura POS — Cashier Desktop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#F8FAFC] text-[#0F172A] antialiased select-none font-sans overflow-hidden">
-    <div id="root"></div>
+  <body class="bg-[#0F172A] text-[#0F172A] antialiased select-none font-sans overflow-hidden">
+    <div id="root">
+      <!-- Instant Startup Splash Screen (Zero White Screen Flash) -->
+      <div id="initial-splash" style="position:fixed;inset:0;background:#0F172A;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Inter',system-ui,sans-serif;color:#F8FAFC;z-index:99999;user-select:none;">
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+          <div style="position:absolute;width:110px;height:110px;border-radius:32px;background:rgba(79,70,229,0.35);filter:blur(24px);animation:splash-pulse 2s infinite ease-in-out;"></div>
+          <img src="/zentura-logo.png" alt="Zentura POS" style="width:72px;height:72px;border-radius:20px;position:relative;box-shadow:0 12px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);" />
+        </div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#FFFFFF;margin-bottom:4px;">Zentura POS</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#818CF8;margin-bottom:28px;">Cashier Desktop Terminal</div>
+        <div style="width:180px;height:4px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;position:relative;">
+          <div style="position:absolute;top:0;bottom:0;width:45%;background:linear-gradient(90deg,#4F46E5,#818CF8);border-radius:99px;animation:splash-bar 1.2s infinite ease-in-out;"></div>
+        </div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:16px;font-weight:500;">Starting terminal & loading offline database...</div>
+      </div>
+      <style>
+        @keyframes splash-pulse {
+          0%, 100% { transform: scale(0.92); opacity: 0.35; }
+          50% { transform: scale(1.18); opacity: 0.85; }
+        }
+        @keyframes splash-bar {
+          0% { left: -45%; }
+          100% { left: 100%; }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

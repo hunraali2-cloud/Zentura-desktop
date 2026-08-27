@@ -13,6 +13,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ cashier }) => {
   const [attendanceId, setAttendanceId] = useState<string | null>(null);
   const [logs, setLogs] = useState<Attendance[]>([]);
   const [staffUsers, setStaffUsers] = useState<User[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadLiveData = () => {
@@ -44,22 +45,40 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ cashier }) => {
   };
 
   const handleClockIn = () => {
-    const staffId = cashier ? cashier.id : (staffUsers[0]?.id || 'u-2');
-    setClockedIn(true);
-    const now = new Date();
-    setClockInTime(now.toLocaleTimeString());
-    const newAtt = dbSync.clockInUser(staffId);
-    setAttendanceId(newAtt.id);
+    if (isSubmitting || clockedIn) return;
+    setIsSubmitting(true);
+
+    try {
+      const staffId = cashier ? cashier.id : (staffUsers[0]?.id || 'u-2');
+      setClockedIn(true);
+      const now = new Date();
+      setClockInTime(now.toLocaleTimeString());
+      const newAtt = dbSync.clockInUser(staffId);
+      setAttendanceId(newAtt.id);
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
+    }
   };
 
   const handleClockOut = () => {
-    if (attendanceId) {
-      dbSync.clockOutUser(attendanceId);
+    if (isSubmitting || !clockedIn) return;
+    setIsSubmitting(true);
+
+    try {
+      if (attendanceId) {
+        dbSync.clockOutUser(attendanceId);
+      }
+      setClockedIn(false);
+      setElapsedSeconds(0);
+      setClockInTime(null);
+      setAttendanceId(null);
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
     }
-    setClockedIn(false);
-    setElapsedSeconds(0);
-    setClockInTime(null);
-    setAttendanceId(null);
   };
 
   return (

@@ -5,8 +5,10 @@ import { ReceiptModal } from '../components/ReceiptModal';
 import { ManagerPinModal } from '../components/ManagerPinModal';
 import { OnlineQrModal } from '../components/OnlineQrModal';
 import { UdhaarModal } from '../components/UdhaarModal';
+import { UdhaarWasoolModal } from '../components/UdhaarWasoolModal';
+import { SmartImage } from '../components/SmartImage';
 import { ReceiptOptions } from '@zentura/escpos-engine';
-import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Barcode, Package, X } from 'lucide-react';
+import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Barcode, Package, X, HandCoins } from 'lucide-react';
 import { dbSync, Product, User, StoreSettings } from '@zentura/database';
 
 interface CartItem {
@@ -36,9 +38,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
   const [showManagerPinModal, setShowManagerPinModal] = useState(false);
   const [showOnlineQrModal, setShowOnlineQrModal] = useState(false);
   const [showUdhaarModal, setShowUdhaarModal] = useState(false);
+  const [showUdhaarWasoolModal, setShowUdhaarWasoolModal] = useState(false);
 
   const [pendingPaymentMethod, setPendingPaymentMethod] = useState<'cash' | 'online' | 'udhaar'>('cash');
   const [toastMessage, setToastMessage] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -112,6 +116,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
   const currencySymbol = storeSettings.currency_symbol || 'Rs.';
 
   const handlePaymentInitiate = (method: 'cash' | 'online' | 'udhaar', tenderedAmount: number) => {
+    if (isProcessingPayment) return;
     if (cart.length === 0) {
       showToast('Cart is empty. Scan product barcode or search item first.');
       return;
@@ -128,58 +133,72 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
     }
   };
 
-  const finalizeTransaction = (paymentMethodLabel: string, tenderedAmount: number, customerDetail: string) => {
-    const change = Math.max(0, tenderedAmount - total);
-    const invoiceNum = `BILL-${Math.floor(100000 + Math.random() * 900000)}`;
+  const finalizeTransaction = (paymentMethodLabel: string, tenderedAmount: number, customerDetail: string): string => {
+    if (isProcessingPayment) return '';
+    setIsProcessingPayment(true);
 
-    const newReceipt: ReceiptOptions = {
-      storeName: storeSettings.store_name || 'ZENTURA POS MAIN STORE',
-      storeAddress: storeSettings.store_address || 'Main Commercial Plaza, Sector F-7, Islamabad',
-      storePhone: storeSettings.store_phone || '+92 (051) 111-936-887',
-      invoiceNumber: invoiceNum,
-      cashierName: cashier ? `${cashier.name} [${customerDetail}]` : `Alex Rivera (Cashier) [${customerDetail}]`,
-      items: cart.map(item => ({
-        name: item.name,
-        qty: item.qty,
-        price: item.price,
-        total: item.price * item.qty
-      })),
-      subtotal,
-      tax,
-      total,
-      tendered: tenderedAmount,
-      change,
-      paymentMethod: paymentMethodLabel,
-      timestamp: new Date().toLocaleString()
-    };
+    try {
+      const change = Math.max(0, tenderedAmount - total);
+      const invoiceNum = `BILL-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    dbSync.createInvoice(
-      {
-        tenant_id: 't-1',
-        cashier_id: cashier ? cashier.name : 'Cashier #01',
-        invoice_number: invoiceNum,
+      const newReceipt: ReceiptOptions = {
+        storeName: storeSettings.store_name || 'ZENTURA POS MAIN STORE',
+        storeAddress: storeSettings.store_address || 'Main Commercial Plaza, Sector F-7, Islamabad',
+        storePhone: storeSettings.store_phone || '+92 (051) 111-936-887',
+        invoiceNumber: invoiceNum,
+        cashierName: cashier ? `${cashier.name} [${customerDetail}]` : `Alex Rivera (Cashier) [${customerDetail}]`,
+        items: cart.map(item => ({
+          name: item.name,
+          qty: item.qty,
+          price: item.price,
+          total: item.price * item.qty
+        })),
         subtotal,
         tax,
         total,
         tendered: tenderedAmount,
         change,
-        payment_method: pendingPaymentMethod === 'udhaar' ? 'account' : pendingPaymentMethod,
-        status: 'completed'
-      },
-      cart.map(item => ({
-        product_id: item.id,
-        qty: item.qty,
-        unit_price: item.price,
-        name: item.name
-      }))
-    );
+        paymentMethod: paymentMethodLabel,
+        timestamp: new Date().toLocaleString()
+      };
 
-    setReceiptData(newReceipt);
-    setShowReceiptModal(true);
-    setCart([]);
-    setNumpadAmount('0');
-    setSearchQuery('');
-    showToast(`Bill Saved & Receipt Printed: ${invoiceNum}`);
+      try {
+        dbSync.createInvoice(
+          {
+            tenant_id: 't-1',
+            cashier_id: cashier ? cashier.name : 'Cashier #01',
+            invoice_number: invoiceNum,
+            subtotal,
+            tax,
+            total,
+            tendered: tenderedAmount,
+            change,
+            payment_method: pendingPaymentMethod === 'udhaar' ? 'account' : pendingPaymentMethod,
+            status: 'completed'
+          },
+          cart.map(item => ({
+            product_id: item.id,
+            qty: item.qty,
+            unit_price: item.price,
+            name: item.name
+          }))
+        );
+      } catch (err) {
+        console.warn('Error saving invoice in dbSync:', err);
+      }
+
+      setReceiptData(newReceipt);
+      setShowReceiptModal(true);
+      setCart([]);
+      setNumpadAmount('0');
+      setSearchQuery('');
+      showToast(`Bill Saved & Receipt Printed: ${invoiceNum}`);
+      return invoiceNum;
+    } finally {
+      setTimeout(() => {
+        setIsProcessingPayment(false);
+      }, 1200);
+    }
   };
 
   // Comprehensive Product Filter matching Name, Barcode, SKU, and ID
@@ -257,6 +276,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
           </div>
 
           <button
+            onClick={() => setShowUdhaarWasoolModal(true)}
+            className="h-10 px-3 bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#059669] font-bold rounded-lg text-xs flex items-center gap-1 border border-[#10B981]/30 cursor-pointer shadow-2xs"
+            title="Receive Udhaar Cash Payment from Customer"
+          >
+            <HandCoins className="w-4 h-4 text-[#10B981]" /> Receive Udhaar
+          </button>
+
+          <button
             onClick={() => {
               if (cart.length > 0) setShowManagerPinModal(true);
             }}
@@ -288,17 +315,14 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
                     className="bg-[#F8FAFC] hover:bg-[#F1F5F9] active:scale-[0.98] border border-[#E2E8F0] rounded-xl p-3.5 flex flex-col justify-between text-left transition-all cursor-pointer shadow-2xs group"
                   >
                     <div className="flex gap-3 items-start w-full">
-                      {product.image_url ? (
-                        <img
+                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-[#E2E8F0] shrink-0">
+                        <SmartImage
+                          productKey={product.barcode || product.sku || product.id}
                           src={product.image_url}
-                          alt=""
-                          className="w-12 h-12 rounded-lg object-cover border border-[#E2E8F0] shrink-0"
+                          alt={product.name}
+                          className="w-12 h-12 object-cover"
                         />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-[#E2E8F0]">
-                          <Package className="w-5 h-5" />
-                        </div>
-                      )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-semibold text-[#64748B] flex items-center justify-between">
                           <span className="flex items-center gap-1 font-mono text-[9px] truncate max-w-[65px]">
@@ -418,6 +442,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
           amount={numpadAmount}
           totalDue={total}
           enableUdhaar={enableUdhaar}
+          isProcessing={isProcessingPayment}
           onAmountChange={setNumpadAmount}
           onPaymentSubmit={handlePaymentInitiate}
         />
@@ -443,11 +468,28 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
       <UdhaarModal
         isOpen={showUdhaarModal}
         totalAmount={total}
-        onUdhaarConfirmed={(customerName, customerPhone) => {
+        onUdhaarConfirmed={(customerName, customerPhone, customerId) => {
           setShowUdhaarModal(false);
-          finalizeTransaction('UDHAAR CREDIT', total, `Udhaar: ${customerName} (${customerPhone})`);
+          const invNum = finalizeTransaction('UDHAAR CREDIT', total, `Udhaar: ${customerName} (${customerPhone})`);
+          dbSync.recordUdhaarTransaction({
+            customer_id: customerId,
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            invoice_number: invNum,
+            type: 'generate',
+            amount: total,
+            cashier_name: cashier ? cashier.name : 'Cashier Counter',
+            notes: `Credit Sale Bill ${invNum}`
+          });
         }}
         onClose={() => setShowUdhaarModal(false)}
+      />
+
+      <UdhaarWasoolModal
+        isOpen={showUdhaarWasoolModal}
+        cashier={cashier}
+        onClose={() => setShowUdhaarWasoolModal(false)}
+        onSuccess={(name, amt) => showToast(`Received ${currencySymbol} ${amt.toLocaleString()} Wasool from ${name}`)}
       />
 
       <ManagerPinModal
@@ -463,3 +505,4 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
     </div>
   );
 };
+

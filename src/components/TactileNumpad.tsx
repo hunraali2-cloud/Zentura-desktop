@@ -5,6 +5,7 @@ interface TactileNumpadProps {
   amount: string;
   totalDue: number;
   enableUdhaar: boolean;
+  isProcessing?: boolean;
   onAmountChange: (value: string | ((prev: string) => string)) => void;
   onPaymentSubmit: (method: 'cash' | 'online' | 'udhaar', tenderedAmount: number) => void;
 }
@@ -13,6 +14,7 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
   amount,
   totalDue,
   enableUdhaar,
+  isProcessing = false,
   onAmountChange,
   onPaymentSubmit
 }) => {
@@ -53,7 +55,6 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
       }
 
       // 1. Physical Numpad Key next to 0 (. / Delete) + Backspace + Delete keys
-      // Configured so the physical key next to 0 with ". / Delete" printed on it acts as Backspace/Delete
       if (
         e.code === 'NumpadDecimal' ||
         e.key === 'NumpadDecimal' ||
@@ -81,6 +82,7 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
       // 3. ENTER / SUBMIT CASH
       if (e.key === 'Enter' || e.code === 'NumpadEnter' || e.keyCode === 13) {
         e.preventDefault();
+        if (isProcessing) return;
         onPaymentSubmit('cash', currentTendered || totalDue);
         return;
       }
@@ -110,7 +112,7 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentTendered, totalDue]);
+  }, [currentTendered, totalDue, isProcessing]);
 
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 flex flex-col gap-3 shadow-xs">
@@ -177,14 +179,16 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#E2E8F0]">
         <button
           onClick={() => onPaymentSubmit('cash', currentTendered || totalDue)}
-          className="h-14 min-h-[48px] bg-[#10B981] hover:bg-[#059669] active:scale-[0.98] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
+          disabled={isProcessing || totalDue <= 0}
+          className="h-14 min-h-[48px] bg-[#10B981] hover:bg-[#059669] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
         >
           <Banknote className="w-5 h-5" /> Cash Paid
         </button>
 
         <button
           onClick={() => onPaymentSubmit('online', totalDue)}
-          className="h-14 min-h-[48px] bg-[#4F46E5] hover:bg-[#4338CA] active:scale-[0.98] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
+          disabled={isProcessing || totalDue <= 0}
+          className="h-14 min-h-[48px] bg-[#4F46E5] hover:bg-[#4338CA] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
         >
           <QrCode className="w-5 h-5" /> Online (QR)
         </button>
@@ -192,7 +196,8 @@ export const TactileNumpad: React.FC<TactileNumpadProps> = ({
         {enableUdhaar ? (
           <button
             onClick={() => onPaymentSubmit('udhaar', totalDue)}
-            className="h-14 min-h-[48px] bg-[#F59E0B] hover:bg-[#D97706] active:scale-[0.98] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
+            disabled={isProcessing || totalDue <= 0}
+            className="h-14 min-h-[48px] bg-[#F59E0B] hover:bg-[#D97706] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-xs transition-all text-sm cursor-pointer"
           >
             <BookOpen className="w-5 h-5" /> Udhaar
           </button>

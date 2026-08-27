@@ -46,7 +46,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       ...receiptData,
       storeName: settings.store_name,
       storeAddress: settings.store_address,
-      storePhone: settings.store_phone
+      storePhone: settings.store_phone,
+      footerNote: settings.receipt_footer_note || 'Thank you for shopping with us!'
     };
 
     const escposBytes = EscPosBuilder.buildReceipt(formattedData);
