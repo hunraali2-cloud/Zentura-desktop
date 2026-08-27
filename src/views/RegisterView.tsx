@@ -6,7 +6,7 @@ import { ManagerPinModal } from '../components/ManagerPinModal';
 import { OnlineQrModal } from '../components/OnlineQrModal';
 import { UdhaarModal } from '../components/UdhaarModal';
 import { ReceiptOptions } from '@zentura/escpos-engine';
-import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Barcode, Package } from 'lucide-react';
+import { ShoppingCart, ShieldAlert, Search, Tag, CheckCircle2, Barcode, Package, X } from 'lucide-react';
 import { dbSync, Product, User, StoreSettings } from '@zentura/database';
 
 interface CartItem {
@@ -58,6 +58,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
   }, []);
 
   const handleBarcodeScan = (scannedBarcode: string) => {
+    setSearchQuery('');
     const code = scannedBarcode.trim().toLowerCase();
     const currentProducts = dbSync.getProducts();
     const matchedProduct = currentProducts.find(
@@ -83,6 +84,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
   };
 
   const addToCart = (itemData: CartItem) => {
+    setSearchQuery('');
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.id === itemData.id);
       if (existing) {
@@ -212,11 +214,46 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ enableUdhaar, cashie
             <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-3" />
             <input
               type="text"
+              autoFocus
               placeholder="Search product name, barcode, or SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:border-[#4F46E5]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  const code = searchQuery.trim().toLowerCase();
+                  const currentProducts = dbSync.getProducts();
+                  const matchedProduct = currentProducts.find(
+                    (p) =>
+                      (p.barcode && p.barcode.toLowerCase() === code) ||
+                      (p.sku && p.sku.toLowerCase() === code) ||
+                      p.name.toLowerCase() === code ||
+                      p.id.toLowerCase() === code
+                  );
+                  if (matchedProduct) {
+                    addToCart({
+                      id: matchedProduct.id,
+                      sku: matchedProduct.sku,
+                      barcode: matchedProduct.barcode,
+                      name: matchedProduct.name,
+                      price: matchedProduct.retail_price,
+                      qty: 1
+                    });
+                    showToast(`Added: ${matchedProduct.name}`);
+                  }
+                  setSearchQuery('');
+                }
+              }}
+              className="w-full pl-9 pr-9 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:border-[#4F46E5]"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-2.5 text-[#64748B] hover:text-[#0F172A] p-0.5 rounded cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <button
