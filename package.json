@@ -13,9 +13,9 @@
     "preview": "vite preview",
     "setup:electron": "node scripts/setup-electron.js",
     "setup:icons": "node scripts/generate-icons.js",
-    "dist": "npm run build && electron-builder",
-    "publish": "npm run build && electron-builder --publish always && node scripts/publish-updates.js",
-    "publish:fast": "vite build && electron-builder --publish always -c.compression=store && node scripts/publish-updates.js",
+    "dist": "npm run build && npx electron-builder",
+    "publish": "npm run build && npx electron-builder --publish always && node scripts/publish-updates.js",
+    "publish:fast": "vite build && npx electron-builder --publish always -c.compression=store && node scripts/publish-updates.js",
     "publish:updates": "node scripts/publish-updates.js"
   },
   "dependencies": {
