@@ -373,9 +373,10 @@ class DbSyncEngine {
   }
 
   public clearOfflineQueue(): void {
-    const key = this.getStorageKey('offline_queue');
+    const key = this.getOfflineQueueKey();
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(key);
+      localStorage.removeItem(this.getStorageKey('offline_queue'));
     }
     this.broadcastChange();
   }

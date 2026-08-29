@@ -7,12 +7,14 @@ import { ExpensesView } from './views/ExpensesView';
 import { UpdaterModal } from './components/UpdaterModal';
 import { CashierAuthModal } from './components/CashierAuthModal';
 import { NetworkStatusBadge } from './components/NetworkStatusBadge';
+import { BackupModal } from './components/GoogleDriveModal';
 import { dbSync, User } from '@zentura/database';
-import { ShoppingBag, PackageCheck, Clock, Download, Store, RotateCcw, UserCheck, LogOut, Lock, Wallet } from 'lucide-react';
+import { ShoppingBag, PackageCheck, Clock, Download, Store, RotateCcw, UserCheck, LogOut, Lock, Wallet, Database } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'register' | 'stock' | 'refunds' | 'expenses' | 'attendance'>('register');
   const [showUpdaterModal, setShowUpdaterModal] = useState(false);
+  const [showBackupModal, setShowBackupModal] = useState(false);
   const [activeCashier, setActiveCashier] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(true);
   const [enableUdhaar, setEnableUdhaar] = useState(true);
@@ -58,7 +60,7 @@ export const App: React.FC = () => {
       <header className="h-16 bg-white border-b border-[#E2E8F0] px-6 flex justify-between items-center shrink-0 shadow-2xs">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <img src="/zentura-logo.png" alt="Zentura POS" className="w-9 h-9 rounded-xl object-contain shadow-xs" />
+            <img src="./zentura-logo.png" alt="Zentura POS" className="w-9 h-9 rounded-xl object-contain shadow-xs" />
             <div>
               <div className="font-extrabold text-[#0F172A] text-base leading-tight">Zentura POS</div>
               <div className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Cashier Counter</div>
@@ -163,6 +165,14 @@ export const App: React.FC = () => {
           )}
 
           <button
+            onClick={() => setShowBackupModal(true)}
+            className="h-9 px-3.5 bg-[#4F46E5]/10 hover:bg-[#4F46E5]/20 text-[#4F46E5] font-bold rounded-lg text-xs flex items-center gap-1.5 border border-[#4F46E5]/30 transition-colors cursor-pointer"
+            title="Download database backup file or restore from JSON"
+          >
+            <Database className="w-3.5 h-3.5 text-[#4F46E5]" /> Backup Data
+          </button>
+
+          <button
             onClick={() => setShowUpdaterModal(true)}
             className="h-9 px-3.5 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#0F172A] font-bold rounded-lg text-xs flex items-center gap-1.5 border border-[#E2E8F0] transition-colors cursor-pointer"
           >
@@ -189,6 +199,12 @@ export const App: React.FC = () => {
           setShowAuthModal(false);
         }}
         onClose={() => setShowAuthModal(false)}
+      />
+
+      {/* Database Backup & Restore Modal */}
+      <BackupModal
+        isOpen={showBackupModal}
+        onClose={() => setShowBackupModal(false)}
       />
 
       {/* GitHub Releases Updater Modal */}

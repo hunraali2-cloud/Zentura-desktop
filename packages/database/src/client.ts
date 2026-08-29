@@ -1,29 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 
-const getEnvVar = (key: string, fallback: string = ''): string => {
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-      return import.meta.env[key];
-    }
-  } catch (e) {}
-  try {
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      return process.env[key];
-    }
-  } catch (e) {}
-  return fallback;
+const DEFAULT_SUPABASE_URL = 'https://vfvaemlbybsidmyvrxgu.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdmFlbWxieWJzaWRteXZyeGd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTUxMzksImV4cCI6MjEwMzI5MTEzOX0.Cs4HtJivPTqAFywya4JrrSmY_Nl8E7YG3o1AmSK5_Pw';
+
+const getEnvUrl = (): string => {
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env.VITE_SUPABASE_URL) return import.meta.env.VITE_SUPABASE_URL;
+    if (import.meta.env.NEXT_PUBLIC_SUPABASE_URL) return import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (import.meta.env.SUPABASE_URL) return import.meta.env.SUPABASE_URL;
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.VITE_SUPABASE_URL) return process.env.VITE_SUPABASE_URL;
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) return process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (process.env.SUPABASE_URL) return process.env.SUPABASE_URL;
+  }
+  return DEFAULT_SUPABASE_URL;
 };
 
-const supabaseUrl =
-  getEnvVar('VITE_SUPABASE_URL') ||
-  getEnvVar('NEXT_PUBLIC_SUPABASE_URL') ||
-  getEnvVar('SUPABASE_URL') ||
-  'https://placeholder.supabase.co';
+const getEnvKey = (): string => {
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env.VITE_SUPABASE_ANON_KEY) return import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (import.meta.env.SUPABASE_ANON_KEY) return import.meta.env.SUPABASE_ANON_KEY;
+    if (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) return import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.VITE_SUPABASE_ANON_KEY) return process.env.VITE_SUPABASE_ANON_KEY;
+    if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (process.env.SUPABASE_ANON_KEY) return process.env.SUPABASE_ANON_KEY;
+    if (process.env.SUPABASE_PUBLISHABLE_KEY) return process.env.SUPABASE_PUBLISHABLE_KEY;
+  }
+  return DEFAULT_SUPABASE_ANON_KEY;
+};
 
-const supabaseAnonKey =
-  getEnvVar('VITE_SUPABASE_ANON_KEY') ||
-  getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
-  getEnvVar('SUPABASE_PUBLISHABLE_KEY') ||
-  'placeholder-key';
+export const supabase = createClient(getEnvUrl(), getEnvKey());
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);

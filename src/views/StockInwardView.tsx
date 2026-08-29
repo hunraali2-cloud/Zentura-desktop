@@ -58,7 +58,7 @@ export const StockInwardView: React.FC<StockInwardViewProps> = ({ cashier }) => 
   }, [galleryImages, gallerySearch]);
 
   const handleDeleteGalleryImage = async (id: string, name: string) => {
-    if (!confirm(`Delete image from Google Drive and media library?`)) return;
+    if (!confirm(`Delete image from product media library?`)) return;
     try {
       await googleDriveService.deleteDriveImage(id);
       if (imagePreview && (imagePreview.includes(id) || imagePreview === id)) {
@@ -333,7 +333,7 @@ export const StockInwardView: React.FC<StockInwardViewProps> = ({ cashier }) => 
                     </button>
                   </div>
                   <div className="text-[10px] text-[#64748B] mt-1.5">
-                    {uploadingImg ? 'Compressing & uploading...' : 'Auto-compressed & stored on Google Drive & local cache'}
+                    {uploadingImg ? 'Compressing & saving image...' : 'Supports JPG, PNG, WEBP, GIF, SVG (auto-compressed & saved for product catalog)'}
                   </div>
                 </div>
               </div>
@@ -458,7 +458,7 @@ export const StockInwardView: React.FC<StockInwardViewProps> = ({ cashier }) => 
               {loadingGallery ? (
                 <div className="flex flex-col items-center justify-center h-60 gap-2 text-xs text-[#64748B]">
                   <RefreshCw className="w-6 h-6 text-[#4F46E5] animate-spin" />
-                  <span>Loading images from Google Drive...</span>
+                  <span>Loading images from media library...</span>
                 </div>
               ) : filteredGalleryImages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-60 gap-2 text-xs text-[#64748B] bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0]">
@@ -497,7 +497,7 @@ export const StockInwardView: React.FC<StockInwardViewProps> = ({ cashier }) => 
                               handleDeleteGalleryImage(img.id, img.name);
                             }}
                             className="absolute top-1.5 left-1.5 p-1.5 bg-white/95 hover:bg-[#FFF1F2] text-[#64748B] hover:text-[#F43F5E] rounded-lg border border-[#CBD5E1] hover:border-[#FECDD3] shadow-xs cursor-pointer opacity-80 group-hover:opacity-100 transition-opacity z-10"
-                            title="Delete image from Drive & library"
+                            title="Delete image from media library"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
